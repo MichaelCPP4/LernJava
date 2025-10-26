@@ -1,0 +1,18 @@
+<hibernate-configuration>
+    <session-factory>
+        <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/myDB</property>
+        <property name="hibernate.connection.username">postgres</property>
+        <property name="hibernate.connection.password">61876187</property>
+<!--        <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>-->
+
+        <!-- Авто-создание таблиц -->
+        <property name="hibernate.hbm2ddl.auto">update</property>
+
+        <!-- Логирование SQL -->
+        <property name="show_sql">true</property>
+
+        <!-- регистрация сущности -->
+        <mapping class="com.example.entity.User"/>
+    </session-factory>
+</hibernate-configuration>
