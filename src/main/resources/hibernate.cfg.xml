@@ -13,6 +13,6 @@
         <property name="show_sql">true</property>
 
         <!-- регистрация сущности -->
-        <mapping class="com.example.entity.User"/>
+        <mapping class="com.example.entity.UserEntity"/>
     </session-factory>
 </hibernate-configuration>
