@@ -1,7 +1,7 @@
 package com.example.service;
 
-import com.example.dao.UserDao;
-import com.example.entity.User;
+import com.example.dao.UserDaoImpl;
+import com.example.entity.UserEntity;
 
 import java.util.InputMismatchException;
 import java.util.List;
@@ -12,12 +12,16 @@ import java.util.Scanner;
  */
 public class UserMenu {
 
-    private final UserDao userDao;
+    private final UserService userService;
     private final Scanner scanner;
 
-    public UserMenu() {
-        this.userDao = new UserDao();
+    public UserMenu(UserService userService) {
+        this.userService = userService;
         this.scanner = new Scanner(System.in);
+    }
+
+    public UserMenu() {
+        this(new UserService(new UserDaoImpl()));
     }
 
     /**
@@ -67,29 +71,29 @@ public class UserMenu {
     }
 
     private void createUser() {
-        User user = new User();
+        UserEntity userEntity = new UserEntity();
 
         System.out.print("Имя: ");
-        user.setName(scanner.nextLine());
+        userEntity.setName(scanner.nextLine());
 
         System.out.print("Email: ");
-        user.setEmail(scanner.nextLine());
+        userEntity.setEmail(scanner.nextLine());
 
-        user.setAge(readInt("Возраст: "));
+        userEntity.setAge(readInt("Возраст: "));
 
-        userDao.save(user);
+        userService.saveUser(userEntity);
         System.out.println("Пользователь успешно создан!");
     }
 
     private void showAllUsers() {
-        List<User> users = userDao.getAll();
+        List<UserEntity> userEntities = userService.getAllUsers();
 
-        if (users.isEmpty()) {
+        if (userEntities.isEmpty()) {
             System.out.println("Пользователи отсутствуют.");
             return;
         }
 
-        for (User u : users) {
+        for (UserEntity u : userEntities) {
             System.out.println(
                     u.getId() + " | " +
                             u.getName() + " | " +
@@ -102,35 +106,35 @@ public class UserMenu {
 
     private void updateUser() {
         long id = readLong("ID пользователя для обновления: ");
-        User user = userDao.get(id);
+        UserEntity userEntity = userService.getUserById(id);
 
-        if (user == null) {
+        if (userEntity == null) {
             System.out.println("Пользователь не найден.");
             return;
         }
 
         System.out.print("Новое имя: ");
-        user.setName(scanner.nextLine());
+        userEntity.setName(scanner.nextLine());
 
         System.out.print("Новый email: ");
-        user.setEmail(scanner.nextLine());
+        userEntity.setEmail(scanner.nextLine());
 
-        user.setAge(readInt("Новый возраст: "));
+        userEntity.setAge(readInt("Новый возраст: "));
 
-        userDao.update(user);
+        userService.updateUser(userEntity);
         System.out.println("Пользователь обновлён.");
     }
 
     private void deleteUser() {
         long id = readLong("ID пользователя для удаления: ");
-        User user = userDao.get(id);
+        UserEntity userEntity = userService.getUserById(id);
 
-        if (user == null) {
+        if (userEntity == null) {
             System.out.println("Пользователь не найден.");
             return;
         }
 
-        userDao.delete(user);
+        userService.deleteUser(userEntity);
         System.out.println("Пользователь удалён.");
     }
 

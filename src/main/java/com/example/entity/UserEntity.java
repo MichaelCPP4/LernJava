@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users") // Таблица в БД, имя явно указано
-public class User {
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +30,7 @@ public class User {
      * Конструктор без аргументов нужен Hibernate
      * Для новых пользователей сразу ставим текущую дату/время
      */
-    public User() {
+    public UserEntity() {
         this.createdAt = LocalDateTime.now();
     }
 
