@@ -16,7 +16,7 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    private String username;
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -26,16 +26,16 @@ public class UserEntity {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    /**
-     * Конструктор без аргументов нужен Hibernate
-     * Для новых пользователей сразу ставим текущую дату/время
-     */
-    public UserEntity() {
+    public UserEntity() {}
+
+    public UserEntity(String name, String email, Integer age) {
+        this.username = name;
+        this.email = email;
+        this.age = age;
         this.createdAt = LocalDateTime.now();
     }
 
     // ================== Геттеры и сеттеры ==================
-
     public Long getId() {
         return id;
     }
@@ -44,12 +44,12 @@ public class UserEntity {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUsername(String name) {
+        this.username = name;
     }
 
     public String getEmail() {
