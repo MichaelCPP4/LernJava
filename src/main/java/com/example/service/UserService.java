@@ -3,6 +3,7 @@ package com.example.service;
 import com.example.dto.UserDto;
 import com.example.entity.UserEntity;
 import com.example.repository.UserRepository;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,9 +13,11 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository,KafkaTemplate<String, String> kafkaTemplate) {
         this.userRepository = userRepository;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public List<UserDto> getAllUsers()
@@ -51,6 +54,9 @@ public class UserService {
 
         UserEntity saved = userRepository.save(entity);
 
+        String message = "{ \"operation\": \"CREATE\", \"email\": \"" + dto.getEmail() + "\" }";
+        kafkaTemplate.send("user-events", message);
+
         return new UserDto(
                 saved.getId(),
                 saved.getUsername(),
@@ -79,6 +85,8 @@ public class UserService {
 
     public void deleteUser(Long id)
     {
+        String message = "{ \"operation\": \"DELETE\", \"email\": \"" + getUserById(id).getEmail() + "\" }";
+        kafkaTemplate.send("user-events", message);
         userRepository.deleteById(id);
     }
 }
