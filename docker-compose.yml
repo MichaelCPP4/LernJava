@@ -1,6 +1,15 @@
 version: '3.8'
 
 services:
+  config-server:
+    build:
+      context: ./config-server
+    image: lernjava-config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./config-repo:/config-repo
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -24,3 +33,52 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  postgres-db:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 61876187
+      POSTGRES_DB: myDB
+    ports:
+      - "5433:5432" # на хост, если хочешь подключаться извне
+    networks:
+      - app-network
+
+  user-service:
+    build: ./
+    container_name: user-service
+    depends_on:
+      - kafka
+      - postgres-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/myDB
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 61876187
+    networks:
+      - app-network
+    ports:
+      - "8080:8080"
+
+  gateway-service:
+    build: ./gateway-service
+    container_name: gateway-service
+    depends_on:
+      - user-service
+    ports:
+      - "8083:8083"
+    networks:
+      - app-network
+
+  discovery-service:
+    build: ./discovery-service
+    container_name: discovery-service
+    ports:
+      - "8761:8761"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
