@@ -1,0 +1,8 @@
+user-service:
+  message: "Hello from config server"
+
+notification-service:
+  message: "Notification config loaded"
+
+gateway:
+  timeout: 3000
