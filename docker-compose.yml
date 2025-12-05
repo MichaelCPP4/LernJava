@@ -67,33 +67,6 @@ services:
     networks:
       - app-network
 
-  # USER SERVICE
-  user-service:
-    build: ./
-    container_name: user-service
-    depends_on:
-      - kafka
-      - postgres-db
-      - config-server
-      - discovery-service
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/myDB
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: 61876187
-
-      # Eureka
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
-
-      # Config server
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
-
-      # Kafka
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-    networks:
-      - app-network
-    ports:
-      - "8080:8080"
-
   # NOTIFICATION SERVICE
   notification-service:
     build: ./notification-service
@@ -126,6 +99,33 @@ services:
       - "8083:8083"
     networks:
       - app-network
+
+  # USER SERVICE
+  user-service:
+    build: ./
+    container_name: user-service
+    depends_on:
+      - kafka
+      - postgres-db
+      - config-server
+      - discovery-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/myDB
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 61876187
+
+      # Eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+
+      # Config server
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+
+      # Kafka
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    networks:
+      - app-network
+    ports:
+      - "8080:8080"
 
 networks:
   app-network:
