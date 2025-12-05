@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # CONFIG SERVER
   config-server:
     build:
       context: ./config-server
@@ -8,9 +9,23 @@ services:
     container_name: config-server
     ports:
       - "8888:8888"
+    environment:
+      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: file:///config-repo
     volumes:
       - ./config-repo:/config-repo
+    networks:
+      - app-network
 
+  # EUREKA DISCOVERY
+  discovery-service:
+    build: ./discovery-service
+    container_name: discovery-service
+    ports:
+      - "8761:8761"
+    networks:
+      - app-network
+
+  # ZOOKEEPER
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
@@ -19,7 +34,10 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    networks:
+      - app-network
 
+  # KAFKA FIXED
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
@@ -31,9 +49,12 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092   # <— FIX
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - app-network
 
+  # POSTGRES DATABASE
   postgres-db:
     image: postgres:15
     container_name: postgres-db
@@ -42,40 +63,67 @@ services:
       POSTGRES_PASSWORD: 61876187
       POSTGRES_DB: myDB
     ports:
-      - "5433:5432" # на хост, если хочешь подключаться извне
+      - "5433:5432"
     networks:
       - app-network
 
+  # USER SERVICE (строится из корня, твоё святое)
   user-service:
     build: ./
     container_name: user-service
     depends_on:
       - kafka
       - postgres-db
+      - config-server
+      - discovery-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/myDB
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 61876187
+
+      # Eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+
+      # Config server
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+
+      # Kafka
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     networks:
       - app-network
     ports:
       - "8080:8080"
 
+  # NOTIFICATION SERVICE
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    depends_on:
+      - kafka
+      - config-server
+      - discovery-service
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    networks:
+      - app-network
+    ports:
+      - "8090:8090"
+
+  # GATEWAY
   gateway-service:
     build: ./gateway-service
     container_name: gateway-service
     depends_on:
       - user-service
+      - notification-service
+      - discovery-service
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
     ports:
       - "8083:8083"
-    networks:
-      - app-network
-
-  discovery-service:
-    build: ./discovery-service
-    container_name: discovery-service
-    ports:
-      - "8761:8761"
     networks:
       - app-network
 
